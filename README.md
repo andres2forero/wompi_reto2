@@ -10,11 +10,14 @@ wompi_reto2/
 ├── input/
 │   └── transactions_50k.jsonl
 ├── output/
-│   └── transactions_summary.parquet
+│   ├── transactions_summary.parquet
+│   └── transactions_summary_validation.jsonl
 ├── requirements.txt
 ├── README.md
 └── .gitignore
 ```
+
+> Los archivos de entrada y salida pueden existir localmente, pero están excluidos del repositorio mediante `.gitignore` debido a que contienen información derivada de las transacciones.
 
 ## Requisitos
 
@@ -24,7 +27,7 @@ wompi_reto2/
 
 ## Instalación
 
-### 1. Install Python
+### 1. Instalar Python
 
 Descargar e instalar [Python 3.13](https://www.python.org/downloads/).
 
@@ -40,7 +43,7 @@ Actualizar PIP:
 python -m pip install --upgrade pip
 ```
 
-### 2. Configurar el Virtual Environment
+### 2. Configurar el entorno virtual
 
 Desde la carpeta del proyecto:
 
@@ -94,18 +97,52 @@ Con el entorno virtual activo y el archivo de entrada ubicado en `input/`, ejecu
 python .\generate_summary.py --input .\input\transactions_50k.jsonl --output .\output\transactions_summary.parquet
 ```
 
+El resultado principal será generado en:
+
+```text
+output/transactions_summary.parquet
+```
+
+### Generar JSONL de validación
+
+El JSONL de validación es opcional y permite revisar fácilmente el resultado de las transformaciones y la agregación.
+
+Para generarlo:
+
+```powershell
+python .\generate_summary.py --input .\input\transactions_50k.jsonl --output .\output\transactions_summary.parquet --json-output .\output\transactions_summary_validation.jsonl
+```
+
+El archivo será generado en:
+
+```text
+output/transactions_summary_validation.jsonl
+```
+
+Este archivo contiene la misma vista agregada generada en Parquet, pero en un formato más sencillo de inspeccionar.
+
+La fecha se representa como `YYYY-MM-DD`. Por ejemplo:
+
+```json
+{"day":"2024-04-01","month":4,"year":2024,"bin":"400489","approved_transactions":1,"total_approved_amount":24995.53}
+```
+
+## Proceso
+
 El script:
 
 1. Lee las transacciones del archivo JSONL.
 2. Extrae y transforma los campos necesarios.
-3. Filtra únicamente las transacciones con estado `APPROVED`.
-4. Extrae el BIN de la tarjeta.
-5. Agrupa las transacciones por día, mes, año y BIN.
-6. Calcula la cantidad de transacciones aprobadas.
-7. Calcula el monto total aprobado.
-8. Genera el archivo Parquet.
-9. Muestra la vista agregada en consola.
-10. Genera un hash SHA-256 del archivo de salida.
+3. Convierte `created_at` a una fecha válida.
+4. Extrae el BIN desde `payment_method_type.extra.bin`.
+5. Convierte `amount_in_cents` a un valor numérico.
+6. Filtra únicamente las transacciones con estado `APPROVED`.
+7. Agrupa las transacciones por día, mes, año y BIN.
+8. Calcula la cantidad de transacciones aprobadas.
+9. Calcula el monto total aprobado.
+10. Genera el archivo Parquet.
+11. Genera opcionalmente un archivo JSONL para validación.
+12. Calcula un hash SHA-256 del archivo Parquet generado.
 
 ## Datos de salida
 
@@ -154,8 +191,29 @@ Al finalizar el proceso se genera un hash SHA-256 del archivo Parquet, permitien
 - Cada línea del archivo JSONL representa una transacción independiente.
 - La agregación se realiza por día y BIN.
 - El archivo Parquet se sobrescribe en cada ejecución para garantizar la idempotencia.
+- El archivo JSONL de validación es opcional y no afecta el resultado principal del proceso.
 
-## Desactivar Virtual Environment
+## Archivos ignorados por Git
+
+Por motivos de privacidad, los archivos que contienen información de transacciones o resultados generados no deben ser publicados en el repositorio.
+
+El `.gitignore` excluye:
+
+```text
+input/*.jsonl
+output/*.parquet
+output/*.jsonl
+```
+
+También se excluyen archivos propios del entorno de desarrollo de Python, como:
+
+```text
+venv/
+.venv/
+__pycache__/
+```
+
+## Desactivar el entorno virtual
 
 Una vez finalizado el procesamiento:
 
@@ -167,7 +225,9 @@ deactivate
 
 El archivo `transactions_50k.jsonl` **no se incluye en este repositorio** debido a que contiene información personal asociada a las transacciones.
 
-El archivo debe ser suministrado de forma independiente y colocado en:
+Los archivos generados a partir de estas transacciones, incluyendo el Parquet y el JSONL de validación, también están excluidos del repositorio.
+
+El archivo de entrada debe ser suministrado de forma independiente y colocado en:
 
 ```text
 input/transactions_50k.jsonl
