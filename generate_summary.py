@@ -222,11 +222,6 @@ def main() -> None:
     # calculando la cantidad y el monto total aprobado
     summary = aggregate_transactions(transformed)
 
-    # Muestra la vista agregada en la consola para facilitar
-    # la validación visual del resultado
-    print("\nVista agregada de transacciones:")
-    print(summary.to_string(index=False))
-
     # Guarda la vista agregada en formato Parquet
     write_parquet(summary, args.output)
 
