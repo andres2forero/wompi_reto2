@@ -24,7 +24,8 @@ Pipeline en Python para procesar transacciones con tarjeta desde un archivo JSON
 wompi_reto2/
 │
 ├── generate_summary.py
-├── transactions_50k.jsonl
+├── input/
+│   └── transactions_50k.jsonl
 ├── output/
 │   └── transactions_summary.parquet
 ├── requirements.txt
