@@ -12,14 +12,14 @@ def read_transactions(input_file: Path) -> pd.DataFrame:
     # Abre el archivo en modo lectura utilizando codificación UTF-8
     with input_file.open("r", encoding="utf-8") as file:
 
-        # Recorre el archivo línea por línea.
+        # Recorre el archivo línea por línea
         # enumerate permite conocer el número de cada línea
         for line_number, line in enumerate(file, start=1):
 
             # Elimina espacios y saltos de línea al inicio y al final
             line = line.strip()
 
-            # Ignora las líneas vacías.
+            # Ignora las líneas vacías
             if not line:
                 continue
 
@@ -42,7 +42,7 @@ def read_transactions(input_file: Path) -> pd.DataFrame:
 
 
 def transform_transactions(df: pd.DataFrame) -> pd.DataFrame:
-    """Extrae y transforma los campos necesarios para la vista resumen."""
+    """Extrae y transforma los campos necesarios para la vista resumen"""
 
     result = pd.DataFrame()
 
@@ -53,7 +53,7 @@ def transform_transactions(df: pd.DataFrame) -> pd.DataFrame:
         errors="coerce"
     )
 
-    # Copia el estado de cada transacción.
+    # Copia el estado de cada transacción
     result["status"] = df["status"]
 
     # Extrae el BIN desde la estructura anidada:
@@ -67,8 +67,8 @@ def transform_transactions(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
 
-    # Convierte el monto a un valor numérico.
-    # Los valores que no puedan convertirse se transforman en NaN.
+    # Convierte el monto a un valor numérico
+    # Los valores que no puedan convertirse se transforman en NaN
     result["amount_in_cents"] = pd.to_numeric(
         df["amount_in_cents"],
         errors="coerce"
@@ -159,17 +159,17 @@ def write_parquet(df: pd.DataFrame, output_file: Path) -> None:
 
 
 def write_jsonl(df: pd.DataFrame, output_file: Path) -> None:
-    """Guarda el resultado en formato JSONL para validación."""
+    """Guarda el resultado en formato JSONL para validación"""
 
-    # Crea el directorio de salida si todavía no existe.
+    # Crea el directorio de salida si todavía no existe
     output_file.parent.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    # Guarda cada fila del DataFrame como un objeto JSON independiente.
-    # lines=True genera el formato JSONL.
-    # orient="records" convierte cada fila en un objeto JSON.
+    # Guarda cada fila del DataFrame como un objeto JSON independiente
+    # lines=True genera el formato JSONL
+    # orient="records" convierte cada fila en un objeto JSON
     df.to_json(
         output_file,
         orient="records",
@@ -210,7 +210,7 @@ def main() -> None:
     )
 
     # Define la ruta del archivo JSONL de entrada
-    # Este argumento es obligatorio para ejecutar el script.
+    # Este argumento es obligatorio para ejecutar el script
     parser.add_argument(
         "--input",
         required=True,
@@ -218,7 +218,7 @@ def main() -> None:
         help="Ruta al archivo JSONL de entrada."
     )
 
-    # Define la ruta donde se guardará el archivo Parquet de salida.
+    # Define la ruta donde se guardará el archivo Parquet de salida
     # Este argumento también es obligatorio
     parser.add_argument(
         "--output",
@@ -250,17 +250,17 @@ def main() -> None:
     # calculando la cantidad y el monto total aprobado
     summary = aggregate_transactions(transformed)
 
-    # Guarda la vista agregada en formato Parquet.
+    # Guarda la vista agregada en formato Parquet
     write_parquet(summary, args.output)
 
     # Si se proporcionó una ruta para el JSONL, genera
-    # una copia de la vista agregada para facilitar su validación.
+    # una copia de la vista agregada para facilitar su validación
     if args.json_output:
         write_jsonl(summary, args.json_output)
 
         print(f"Archivo JSONL de validación: {args.json_output}")
 
-    # Calcula el hash SHA-256 del archivo Parquet generado.
+    # Calcula el hash SHA-256 del archivo Parquet generado
     file_hash = calculate_file_hash(args.output)
 
     # Muestra un resumen de la ejecución
